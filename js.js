@@ -61,11 +61,12 @@ function addMovements(movements){
   containerMovements.innerHTML = "";
   movements.forEach((value, i)=> { 
     const type = value >= 0 ? "deposit" : "withdrawal";
+    const sms = value >= 0 ? "Зарахування" : "Зняття"
     const html = `
     <div class="movements__row">
       <div class="movements__type movements__type--${type}">${
       i + 1
-    } ${type}</div>
+    } ${sms}</div>
       <div class="movements__date">24/01/2037</div>
       <div class="movements__value">${value}</div>
     </div>`;
@@ -87,11 +88,11 @@ function createLogin(accs) {
 
 createLogin(accounts)
 
-function addAllBalance(movements){
-  let add = movements.reduce((acc, val)=> {
+function addAllBalance(ac){
+  ac.balance = ac.movements.reduce((acc, val)=> {
     return acc + val
   })
-  return labelBalance.textContent = `${add} UA`
+  return labelBalance.textContent = `${ac.balance} UA`
 }
 
 
@@ -100,32 +101,53 @@ function sumAll(movements){
   const comeIn = movements
       .filter((el)=> el > 0)
       .reduce((acc, el) => acc + el, 0)
-  labelSumIn.textContent = `${comeIn}`
+  labelSumIn.textContent = `${comeIn} UA`
 
   const comeOut = movements
       .filter((el)=> el < 0)
       .reduce((acc, el) => el + acc)
-  labelSumOut.textContent = `${Math.abs(comeOut)}`
+  labelSumOut.textContent = `${Math.abs(comeOut)} UA`
 
   const sum = comeIn + comeOut
-  labelSumInterest.textContent = `${sum}`
+  labelSumInterest.textContent = `${sum} UA`
   
 }
 
+function update(acc) {
+  addMovements(acc.movements);
+  addAllBalance(acc);
+  sumAll(acc.movements);
+};
 
 let currentAccount;
 
 btnLogin.addEventListener('click', (e) => {
   e.preventDefault()
-  currentAccount = accounts.find((acc) => {
+  currentAccount = accounts.find(function(acc) {
     return acc.login === inputLoginUsername.value;
-  })
-  console.log(currentAccount)
+  });
   if(currentAccount && currentAccount.pin === Number(inputLoginPin.value)){
-    containerApp.style.opacity = 100
-    nputLoginPin.value = inputLoginUsername.value = ""
-    addMovements(currentAccount.movements);
-    addAllBalance(currentAccount.movements);
-    sumAll(currentAccount.movements);
+    console.log("ONE")
+    containerApp.style.opacity = 100;
+    inputLoginPin.value = inputLoginUsername.value = "";
+     update(currentAccount)
   }
 })
+
+btnTransfer.addEventListener("click", function(e) {
+  e.preventDefault();
+  const recivAc = accounts.find(function(ac) {
+    return ac.login === inputTransferTo.value;
+  })
+  const amount = Number(inputTransferAmount.value);
+  if(
+    recivAc &&
+    amount > 0 &&
+    currentAccount.balance >= amount &&
+    recivAc.login !== currentAccount.login
+  ){
+    currentAccount.movements.push(-amount)
+    recivAc.movements.push(amount)
+    update(currentAccount)
+  }
+});
