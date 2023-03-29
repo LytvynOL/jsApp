@@ -57,9 +57,10 @@ const inputLoanAmount = document.querySelector(".form__input--loan-amount");
 const inputCloseUsername = document.querySelector(".form__input--user");
 const inputClosePin = document.querySelector(".form__input--pin");
 
-function addMovements(movements){
+function addMovements(movements, sort = false){
   containerMovements.innerHTML = "";
-  movements.forEach((value, i)=> { 
+  const mov = sort ? movements.slice().sort((a, b)=> a-b) : movements
+  mov.forEach((value, i)=> { 
     const type = value >= 0 ? "deposit" : "withdrawal";
     const sms = value >= 0 ? "Зарахування" : "Зняття"
     const html = `
@@ -151,3 +152,33 @@ btnTransfer.addEventListener("click", function(e) {
     update(currentAccount)
   }
 });
+
+btnClose.addEventListener("click", (e) => {
+  e.preventDefault();
+  if(inputCloseUsername.value === currentAccount.login &&
+     Number(inputClosePin.value) === currentAccount.pin){
+      const index = accounts.findIndex((acc)=> {
+        return acc.login === currentAccount.login
+      })
+      accounts.splice(index, 1);
+      containerApp.style.opacity = 0
+     }
+     inputCloseUsername.value = inputClosePin.value = ""
+})
+
+
+btnLoan.addEventListener("click", (e) => {
+  e.preventDefault()
+  const amount = Number(inputLoanAmount.value)
+  if (amount > 0) {
+    currentAccount.movements.push(amount)
+    update(currentAccount)
+  }
+  inputLoanAmount.value = ""
+})
+let sort = false
+btnSort.addEventListener("click", (e)=> {
+  e.preventDefault()
+  addMovements(currentAccount.movements, sort)
+  sort = !sort
+})
